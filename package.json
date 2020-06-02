@@ -1,0 +1,51 @@
+{
+  "name": "@wings-software/jarvis",
+  "version": "0.1.0",
+  "license": "UNLICENSED",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "tsc --noEmit",
+    "clean": "rm -rf lib",
+    "prepublishOnly": "yarn build",
+    "build": "yarn clean && tsc"
+  },
+  "peerDependencies": {},
+  "dependencies": {
+    "tslib": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/webpack": "^4.41.17",
+    "@typescript-eslint/eslint-plugin": "^3.1.0",
+    "@typescript-eslint/parser": "^3.1.0",
+    "eslint": "^7.1.0",
+    "eslint-config-prettier": "^6.11.0",
+    "husky": "^4.2.5",
+    "lint-staged": "^10.2.7",
+    "prettier": "^2.0.5",
+    "typescript": "^3.9.3"
+  },
+  "optionalDependencies": {
+    "webpack": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=13.8.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint",
+      "sh scripts/typecheck-staged.sh",
+      "prettier --check"
+    ],
+    "*.scss": [
+      "prettier --check"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "node ./scripts/lint-commit-message.js \"$(cat $HUSKY_GIT_PARAMS)\""
+    }
+  }
+}
