@@ -13,6 +13,8 @@
   },
   "peerDependencies": {},
   "dependencies": {
+    "@types/mkdirp": "^1.0.0",
+    "mkdirp": "^1.0.4",
     "tslib": "^2.0.0"
   },
   "devDependencies": {
