@@ -21,7 +21,7 @@ export interface Options {
   config: string;
   input: string;
   output: string;
-  json?: string;
+  json?: string | boolean;
   verbose?: boolean;
 }
 
@@ -115,6 +115,13 @@ export default async function (options: Options): Promise<void> {
     );
     await fs.promises.copyFile(path.resolve(__dirname, './table.js'), path.join(OUT_DIR, 'table.js'));
     await fs.promises.copyFile(path.resolve(__dirname, './coverage.css'), path.join(OUT_DIR, 'coverage.css'));
+
+    if (options.json) {
+      const jsonFile = typeof options.json === 'string' ? options.json : 'summary.json';
+      const jsonFilePath = path.resolve(OUT_DIR, jsonFile);
+      await mkdirp(path.dirname(jsonFilePath));
+      await fs.promises.writeFile(jsonFilePath, JSON.stringify(groupedData, null, 2), 'utf8');
+    }
   } catch (e) {
     if (options.verbose) {
       console.log(e);
