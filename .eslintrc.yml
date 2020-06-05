@@ -21,7 +21,6 @@ extends:
   - prettier
 rules:
   # built-in
-  no-console: 2
   semi: [2, 'always']
   no-await-in-loop: 2
   no-shadow: 2
@@ -40,6 +39,10 @@ rules:
       argsIgnorePattern: ^_
   '@typescript-eslint/member-delimiter-style': 0
 overrides:
+  - files:
+      - bin/**/*.js
+    rules:
+      '@typescript-eslint/no-var-requires': 0
   - files:
       - '**/*.test.ts'
       - '**/*.test.tsx'

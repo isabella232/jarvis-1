@@ -1,0 +1,129 @@
+import * as fs from 'fs';
+import * as path from 'path';
+
+import Handlebars from 'handlebars';
+import Ajv from 'ajv';
+import betterAjvErrors from 'better-ajv-errors';
+import mkdirp from 'mkdirp';
+import chalk from 'chalk';
+import _ from 'lodash';
+
+import groupData, { CoverageData, Config, CoverageSummary } from './groupData';
+import configSchema from './config-schema.json';
+import coverageSchema from './coverage-schema.json';
+
+const ajv = new Ajv({ jsonPointers: true });
+
+const validateConfig = ajv.compile(configSchema);
+const validateCoverage = ajv.compile(coverageSchema);
+
+export interface Options {
+  config: string;
+  input: string;
+  output: string;
+  json?: string;
+  verbose?: boolean;
+}
+
+Handlebars.registerHelper('kebabCase', function (value: string) {
+  return _.kebabCase(value);
+});
+
+Handlebars.registerHelper('objectLength', function (value: any) {
+  return _.keys(value).length;
+});
+
+Handlebars.registerHelper('json', function (value: any) {
+  return JSON.stringify(value, null, 2);
+});
+
+function getCoverageClass(value: number): string {
+  if (value < 50) return 'low';
+
+  if (value >= 50 && value < 80) return 'medium';
+
+  if (value >= 80) return 'high';
+
+  return '';
+}
+
+function getMaxPct(value: CoverageSummary): number {
+  return Math.max(value.lines.pct, value.functions.pct, value.statements.pct, value.branches.pct);
+}
+
+Handlebars.registerHelper('coverageClass', getCoverageClass);
+Handlebars.registerHelper('maxPct', getMaxPct);
+Handlebars.registerHelper('coverageClassForMaxPct', function (value: CoverageSummary) {
+  const max = getMaxPct(value);
+
+  return getCoverageClass(max);
+});
+
+export default async function (options: Options): Promise<void> {
+  try {
+    console.log(chalk.white.bold('Generating Report...'));
+    const [templateContent, configContent, inputContet] = await Promise.all([
+      fs.promises.readFile(path.join(__dirname, 'template.hbs'), 'utf8'),
+      fs.promises.readFile(path.resolve(process.cwd(), options.config), 'utf8'),
+      fs.promises.readFile(path.resolve(process.cwd(), options.input), 'utf8')
+    ]);
+
+    options.verbose && console.log('Read configs successfully');
+
+    const config: Config = JSON.parse(configContent.toString());
+    const coverage: CoverageData = JSON.parse(inputContet.toString());
+
+    options.verbose && console.log('Validating config...');
+
+    const validConfig = await validateConfig(config);
+
+    if (!validConfig) {
+      console.log(betterAjvErrors(configSchema, config, validateConfig.errors));
+
+      process.exit(1);
+    }
+
+    options.verbose && console.log('Validating coverage...');
+
+    const validCoverage = await validateCoverage(coverage);
+
+    if (!validCoverage) {
+      console.log(betterAjvErrors(coverageSchema, coverage, validateCoverage.errors));
+
+      process.exit(1);
+    }
+
+    options.verbose && console.log('Computing coverage...');
+    const groupedData = await groupData(config, coverage);
+
+    options.verbose && console.log('Generating HTML...');
+    const template = Handlebars.compile(templateContent);
+    const outputData = template({ coverage: groupedData });
+
+    const OUT_DIR = path.resolve(process.cwd(), options.output);
+
+    options.verbose && console.log('Removing old report...');
+    await fs.promises.rmdir(OUT_DIR, { recursive: true });
+
+    await mkdirp(OUT_DIR);
+
+    options.verbose && console.log('Writing report to disk...');
+    await fs.promises.writeFile(path.join(OUT_DIR, 'index.html'), outputData, 'utf8');
+    await fs.promises.copyFile(
+      path.resolve(__dirname, '../../assets/pure-min.css'),
+      path.join(OUT_DIR, 'pure-min.css')
+    );
+    await fs.promises.copyFile(path.resolve(__dirname, './table.js'), path.join(OUT_DIR, 'table.js'));
+    await fs.promises.copyFile(path.resolve(__dirname, './coverage.css'), path.join(OUT_DIR, 'coverage.css'));
+  } catch (e) {
+    if (options.verbose) {
+      console.log(e);
+    }
+
+    console.log(chalk.red('Something went wrong! Try using --verbose flag to debug'));
+
+    process.exit(1);
+  }
+
+  console.log(chalk.green('Done!'));
+}

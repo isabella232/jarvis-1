@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "properties": {
+    "additionalProperties": {
+      "$ref": "#/definitions/CoverageSummary"
+    }
+  },
+  "definitions": {
+    "Coverage": {
+      "type": "object",
+      "required": ["total", "covered", "skipped", "pct"],
+      "properties": {
+        "total": { "type": "number" },
+        "covered": { "type": "number" },
+        "skipped": { "type": "number" },
+        "pct": { "type": "number" }
+      }
+    },
+    "CoverageSummary": {
+      "type": "object",
+      "required": ["lines", "statements", "functions", "branches"],
+      "properties": {
+        "lines": { "$ref": "#/definitions/Coverage" },
+        "statements": { "$ref": "#/definitions/Coverage" },
+        "functions": { "$ref": "#/definitions/Coverage" },
+        "branches": { "$ref": "#/definitions/Coverage" }
+      }
+    }
+  }
+}

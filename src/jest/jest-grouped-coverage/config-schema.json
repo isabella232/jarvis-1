@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "required": ["groups"],
+  "properties": {
+    "additionalProperties": false,
+    "groups": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "ignore": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
