@@ -8,9 +8,11 @@ import mkdirp from 'mkdirp';
 import chalk from 'chalk';
 import _ from 'lodash';
 
-import groupData, { CoverageData, Config, CoverageSummary } from './groupData';
+import groupData, { Config } from './groupData';
 import configSchema from './config-schema.json';
-import coverageSchema from './coverage-schema.json';
+import coverageSchema from '../common/coverage-schema.json';
+import type { CoverageData } from '../common/helpers';
+import { getCoverageClass, getMaxPct, getCoverageClassForMaxPct } from '../common/helpers';
 
 const ajv = new Ajv({ jsonPointers: true });
 
@@ -37,32 +39,14 @@ Handlebars.registerHelper('json', function (value: any) {
   return JSON.stringify(value, null, 2);
 });
 
-function getCoverageClass(value: number): string {
-  if (value < 50) return 'low';
-
-  if (value >= 50 && value < 80) return 'medium';
-
-  if (value >= 80) return 'high';
-
-  return '';
-}
-
-function getMaxPct(value: CoverageSummary): number {
-  return Math.max(value.lines.pct, value.functions.pct, value.statements.pct, value.branches.pct);
-}
-
 Handlebars.registerHelper('coverageClass', getCoverageClass);
 Handlebars.registerHelper('maxPct', getMaxPct);
-Handlebars.registerHelper('coverageClassForMaxPct', function (value: CoverageSummary) {
-  const max = getMaxPct(value);
+Handlebars.registerHelper('coverageClassForMaxPct', getCoverageClassForMaxPct);
 
-  return getCoverageClass(max);
-});
-
-export default async function (options: Options): Promise<void> {
+export default async function jestGroupedCoverageGenerator(options: Options): Promise<void> {
   try {
     console.log(chalk.white.bold('Generating Report...'));
-    const [templateContent, configContent, inputContet] = await Promise.all([
+    const [templateContent, configContent, inputContent] = await Promise.all([
       fs.promises.readFile(path.join(__dirname, 'template.hbs'), 'utf8'),
       fs.promises.readFile(path.resolve(process.cwd(), options.config), 'utf8'),
       fs.promises.readFile(path.resolve(process.cwd(), options.input), 'utf8')
@@ -71,7 +55,7 @@ export default async function (options: Options): Promise<void> {
     options.verbose && console.log('Read configs successfully');
 
     const config: Config = JSON.parse(configContent.toString());
-    const coverage: CoverageData = JSON.parse(inputContet.toString());
+    const coverage: CoverageData = JSON.parse(inputContent.toString());
 
     options.verbose && console.log('Validating config...');
 

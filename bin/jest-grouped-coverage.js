@@ -3,9 +3,8 @@ const reportGenerator = require('../lib/jest/jest-grouped-coverage').default;
 
 require('yargs')
   .scriptName('jest-grouped-coverage')
-  .command('$0 <cmd> [args]')
   .command(
-    'generate',
+    '$0 [args]',
     'Generate reports using given groups data as json',
     yargs => {
       yargs

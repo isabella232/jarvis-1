@@ -2,27 +2,11 @@ import * as path from 'path';
 
 import globby from 'globby';
 
+import type { CoverageSummary, Coverage, CoverageData } from '../common/helpers';
+
 export interface Config {
   groups: Record<string, string[]>;
   ignore?: string[];
-}
-
-export interface Coverage {
-  total: number;
-  covered: number;
-  skipped: number;
-  pct: number;
-}
-
-export interface CoverageSummary {
-  lines: Coverage;
-  statements: Coverage;
-  functions: Coverage;
-  branches: Coverage;
-}
-
-export interface CoverageData extends Record<string, CoverageSummary> {
-  all: CoverageSummary;
 }
 
 export interface GroupedCoverageSummary {
@@ -80,7 +64,7 @@ function getTotalCoverage(data: Record<string, CoverageSummary>): CoverageSummar
 export default async function groupData(config: Config, coverage: CoverageData): Promise<GroupedCoverage> {
   const { groups, ignore } = config;
 
-  delete coverage.all; // remove total coverage
+  delete coverage.total; // remove total coverage
 
   const groupKeys = Object.keys(groups); // extract all categories
   const groupedCoverage: GroupedCoverage = {};

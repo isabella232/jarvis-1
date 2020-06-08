@@ -6,7 +6,8 @@
     "lib"
   ],
   "bin": {
-    "jest-grouped-coverage": "bin/jest-grouped-coverage.js"
+    "jest-grouped-coverage": "bin/jest-grouped-coverage.js",
+    "jest-text-coverage-reporter": "bin/jest-text-coverage-reporter.js"
   },
   "scripts": {
     "test": "tsc --noEmit",
