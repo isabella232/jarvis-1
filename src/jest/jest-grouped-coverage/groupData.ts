@@ -6,6 +6,7 @@ import type { CoverageSummary, Coverage, CoverageData } from '../common/helpers'
 
 export interface Config {
   groups: Record<string, string[]>;
+  cwd: string;
   ignore?: string[];
 }
 
@@ -61,8 +62,8 @@ function getTotalCoverage(data: Record<string, CoverageSummary>): CoverageSummar
   return total;
 }
 
-export default async function groupData(config: Config, coverage: CoverageData): Promise<GroupedCoverage> {
-  const { groups, ignore } = config;
+export default async function groupData(coverage: CoverageData, config: Config): Promise<GroupedCoverage> {
+  const { groups, ignore, cwd } = config;
 
   delete coverage.total; // remove total coverage
 
@@ -78,7 +79,7 @@ export default async function groupData(config: Config, coverage: CoverageData):
 
     // for all the matched files, extract the coverage info
     files.forEach(file => {
-      const filepath = path.join(process.cwd(), file);
+      const filepath = path.join(cwd, file);
       if (filepath in coverage) {
         temp.files[file] = coverage[filepath];
 
@@ -95,7 +96,7 @@ export default async function groupData(config: Config, coverage: CoverageData):
 
   // collect all the uncategorized data
   const uncategorizedSummary = Object.keys(coverage).reduce<Record<string, CoverageSummary>>((acc, key) => {
-    const filepath = path.relative(process.cwd(), key);
+    const filepath = path.relative(cwd, key);
 
     acc[filepath] = coverage[key];
 

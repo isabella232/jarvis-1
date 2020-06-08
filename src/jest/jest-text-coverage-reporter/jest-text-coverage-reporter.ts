@@ -17,6 +17,8 @@ const validateCoverage = ajv.compile(coverageSchema);
 export interface Options {
   input: string;
   output: string;
+  up: number;
+  cwd: string;
   verbose?: boolean;
 }
 
@@ -40,7 +42,7 @@ export default async function jestTextCoverageReporter(options: Options): Promis
     }
 
     options.verbose && console.log('Generating Text Report...');
-    const outputData = textReport(coverage);
+    const outputData = textReport(coverage, options);
 
     const OUTPUT_PATH = path.resolve(process.cwd(), options.output);
 

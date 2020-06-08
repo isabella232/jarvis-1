@@ -23,6 +23,11 @@ require('yargs')
           describe: 'Output path for the report',
           default: 'coverage/grouped-coverage-report'
         })
+        .option('cwd', {
+          describe:
+            'Convert absolute paths to relative paths (w.r.t to this path), within the reports. Default is `process.cwd()`',
+          default: process.cwd()
+        })
         .option('json', {
           describe: 'export result in JSON format in output directory'
         })

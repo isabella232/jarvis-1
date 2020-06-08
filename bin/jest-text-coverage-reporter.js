@@ -18,6 +18,17 @@ require('yargs')
           describe: 'Output path for the report',
           default: 'coverage/text-report.md'
         })
+        .option('u', {
+          alias: 'up',
+          describe: 'Slice a path off the start of the paths',
+          number: true,
+          default: 0
+        })
+        .option('cwd', {
+          describe:
+            'Convert absolute paths to relative paths (w.r.t to this path), within the reports. Default is `process.cwd()`',
+          default: process.cwd()
+        })
         .option('verbose', {
           describe: 'Show verbose output'
         });

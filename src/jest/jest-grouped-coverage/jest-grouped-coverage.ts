@@ -23,6 +23,7 @@ export interface Options {
   config: string;
   input: string;
   output: string;
+  cwd: string;
   json?: string | boolean;
   verbose?: boolean;
 }
@@ -78,7 +79,7 @@ export default async function jestGroupedCoverageGenerator(options: Options): Pr
     }
 
     options.verbose && console.log('Computing coverage...');
-    const groupedData = await groupData(config, coverage);
+    const groupedData = await groupData(coverage, config);
 
     options.verbose && console.log('Generating HTML...');
     const template = Handlebars.compile(templateContent);
