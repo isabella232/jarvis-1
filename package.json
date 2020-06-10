@@ -1,13 +1,14 @@
 {
   "name": "@wings-software/jarvis",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "license": "UNLICENSED",
   "files": [
     "lib"
   ],
   "bin": {
     "jest-grouped-coverage": "bin/jest-grouped-coverage.js",
-    "jest-text-coverage-reporter": "bin/jest-text-coverage-reporter.js"
+    "jest-text-coverage-reporter": "bin/jest-text-coverage-reporter.js",
+    "clean-css-types": "bin/clean-css-types.js"
   },
   "scripts": {
     "test": "tsc --noEmit",
