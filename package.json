@@ -3,12 +3,14 @@
   "version": "0.4.0",
   "license": "UNLICENSED",
   "files": [
+    "bin",
     "lib"
   ],
   "bin": {
     "jest-grouped-coverage": "bin/jest-grouped-coverage.js",
     "jest-text-coverage-reporter": "bin/jest-text-coverage-reporter.js",
-    "clean-css-types": "bin/clean-css-types.js"
+    "clean-css-types": "bin/clean-css-types.js",
+    "typecheck-staged": "bin/typecheck-staged.sh"
   },
   "scripts": {
     "test": "tsc --noEmit",
@@ -53,7 +55,7 @@
   "lint-staged": {
     "*.{ts,tsx}": [
       "eslint",
-      "sh scripts/typecheck-staged.sh",
+      "sh bin/typecheck-staged.sh",
       "prettier --check"
     ],
     "*.scss": [

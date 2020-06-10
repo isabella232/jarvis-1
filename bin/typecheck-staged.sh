@@ -1,3 +1,4 @@
+#!/usr/bin/env sh
 # this is needed because "When input files are specified on the command line, tsconfig.json files are ignored."
 # so this is the only way to run tsc with filenames and tsconfig together :'(
 # see "https://www.typescriptlang.org/docs/handbook/tsconfig-json.html"
