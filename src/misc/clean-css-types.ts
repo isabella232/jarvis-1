@@ -12,6 +12,7 @@ export default async function (options: Options): Promise<void> {
   // const workingDir = path.resolve(process.cwd(), options.path);
   const globs = options.ext.map(ext => path.normalize(`${options.path}/**/*${ext}.d.ts`));
 
+  console.log(`Looking for ${options.ext.join(', ')} files`);
   const files = await globby(globs);
   let deletedCount = 0;
 
