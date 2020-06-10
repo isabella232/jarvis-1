@@ -79,7 +79,7 @@ export default async function jestGroupedCoverageGenerator(options: Options): Pr
     }
 
     options.verbose && console.log('Computing coverage...');
-    const groupedData = await groupData(coverage, config);
+    const groupedData = await groupData(coverage, { ...config, cwd: options.cwd });
 
     options.verbose && console.log('Generating HTML...');
     const template = Handlebars.compile(templateContent);

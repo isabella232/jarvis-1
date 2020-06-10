@@ -13,7 +13,7 @@
     "test": "tsc --noEmit",
     "clean": "rm -rf lib",
     "prepublishOnly": "yarn build",
-    "build": "yarn clean && tsc && copyfiles -e '**/*.ts' -u 1 'src/**/*.*' lib"
+    "build": "yarn clean && ./build.sh && tsc && copyfiles -e '**/*.ts' -u 1 'src/**/*.*' lib"
   },
   "peerDependencies": {},
   "dependencies": {
@@ -40,6 +40,7 @@
     "husky": "^4.2.5",
     "lint-staged": "^10.2.7",
     "prettier": "^2.0.5",
+    "ts-json-schema-generator": "^0.70.1",
     "typescript": "^3.9.3"
   },
   "optionalDependencies": {

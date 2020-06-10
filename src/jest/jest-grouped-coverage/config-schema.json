@@ -1,22 +1,27 @@
 {
-  "type": "object",
-  "required": ["groups"],
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "definitions": {
+  },
   "properties": {
-    "additionalProperties": false,
     "groups": {
-      "type": "object",
       "additionalProperties": {
-        "type": "array",
         "items": {
           "type": "string"
-        }
-      }
+        },
+        "type": "array"
+      },
+      "type": "object"
     },
     "ignore": {
-      "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "type": "array"
     }
-  }
+  },
+  "required": [
+    "groups"
+  ],
+  "type": "object"
 }

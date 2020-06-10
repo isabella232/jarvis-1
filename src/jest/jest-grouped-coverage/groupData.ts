@@ -6,8 +6,11 @@ import type { CoverageSummary, Coverage, CoverageData } from '../common/helpers'
 
 export interface Config {
   groups: Record<string, string[]>;
-  cwd: string;
   ignore?: string[];
+}
+
+export interface ExtendedConfig extends Config {
+  cwd: string;
 }
 
 export interface GroupedCoverageSummary {
@@ -62,7 +65,7 @@ function getTotalCoverage(data: Record<string, CoverageSummary>): CoverageSummar
   return total;
 }
 
-export default async function groupData(coverage: CoverageData, config: Config): Promise<GroupedCoverage> {
+export default async function groupData(coverage: CoverageData, config: ExtendedConfig): Promise<GroupedCoverage> {
   const { groups, ignore, cwd } = config;
 
   delete coverage.total; // remove total coverage

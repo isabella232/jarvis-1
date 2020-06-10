@@ -12,8 +12,9 @@ export interface CoverageSummary {
   branches: Coverage;
 }
 
-export interface CoverageData extends Record<string, CoverageSummary> {
+export interface CoverageData {
   total: CoverageSummary;
+  [key: string]: CoverageSummary;
 }
 
 export function getCoverageClassForMaxPct(value: CoverageSummary): string {
