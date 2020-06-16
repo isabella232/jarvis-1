@@ -1,11 +1,14 @@
-name: publish
+name: Publish
 
 on:
   push:
-    tags: ['**']
+    tags:
+      - '*'
 
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
-      - echo {{ toJSON(github.event) }}
+      - run: |
+          echo {{ toJSON(github.event) }}
