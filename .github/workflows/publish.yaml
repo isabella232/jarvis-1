@@ -1,0 +1,11 @@
+name: publish
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - echo {{ toJSON(github.event) }}
