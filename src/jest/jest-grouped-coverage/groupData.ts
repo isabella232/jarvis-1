@@ -13,25 +13,14 @@ export interface ExtendedConfig extends Config {
   cwd: string;
 }
 
+export type CoveragePercentage = Record<'l' | 'f' | 'b' | 's', number>;
+
 export interface GroupedCoverageSummary {
-  total: CoverageSummary;
-  files: Record<string, CoverageSummary>;
+  total: CoveragePercentage;
+  files: Record<string, CoveragePercentage>;
 }
 
 export type GroupedCoverage = Record<string, GroupedCoverageSummary>;
-
-function getDefaultCoverage(): Coverage {
-  return { total: 0, covered: 0, skipped: 0, pct: 0 };
-}
-
-function getDefaultCoverageSummary(): CoverageSummary {
-  return {
-    lines: getDefaultCoverage(),
-    functions: getDefaultCoverage(),
-    statements: getDefaultCoverage(),
-    branches: getDefaultCoverage()
-  };
-}
 
 function addCoverage(coverage1: Coverage, coverage2: Coverage): Coverage {
   return {
@@ -42,33 +31,42 @@ function addCoverage(coverage1: Coverage, coverage2: Coverage): Coverage {
   };
 }
 
+function addCoverageSummaries(summary1: CoverageSummary, summary2: CoverageSummary): CoverageSummary {
+  return {
+    lines: addCoverage(summary1.lines, summary2.lines),
+    functions: addCoverage(summary1.functions, summary2.functions),
+    statements: addCoverage(summary1.statements, summary2.statements),
+    branches: addCoverage(summary1.branches, summary2.branches)
+  };
+}
+
 function getPercentage(data: Coverage): number {
   // returns percentage with only 2 digits after decimal
   return Math.round((data.covered * 100 * 100) / data.total) / 100;
 }
 
-function getTotalCoverage(data: Record<string, CoverageSummary>): CoverageSummary {
-  const total = Object.entries(data).reduce((acc, [_key, { lines, functions, statements, branches }]) => {
-    return {
-      lines: addCoverage(acc.lines, lines),
-      functions: addCoverage(acc.functions, functions),
-      statements: addCoverage(acc.statements, statements),
-      branches: addCoverage(acc.branches, branches)
-    };
-  }, getDefaultCoverageSummary());
-
-  total.lines.pct = getPercentage(total.lines);
-  total.statements.pct = getPercentage(total.statements);
-  total.functions.pct = getPercentage(total.functions);
-  total.branches.pct = getPercentage(total.branches);
-
-  return total;
+function calculateCoveragePercentage(data: CoverageSummary): CoveragePercentage {
+  return {
+    l: getPercentage(data.lines),
+    s: getPercentage(data.statements),
+    f: getPercentage(data.functions),
+    b: getPercentage(data.branches)
+  };
 }
 
-export default async function groupData(coverage: CoverageData, config: ExtendedConfig): Promise<GroupedCoverage> {
+function pickCoveragePecentage(data: CoverageSummary): CoveragePercentage {
+  return {
+    l: data.lines.pct,
+    s: data.statements.pct,
+    f: data.functions.pct,
+    b: data.branches.pct
+  };
+}
+
+export default async function groupData(coverageData: CoverageData, config: ExtendedConfig): Promise<GroupedCoverage> {
   const { groups, ignore, cwd } = config;
 
-  delete coverage.total; // remove total coverage
+  delete coverageData.total; // remove total coverage
 
   const groupKeys = Object.keys(groups); // extract all categories
   const groupedCoverage: GroupedCoverage = {};
@@ -78,38 +76,65 @@ export default async function groupData(coverage: CoverageData, config: Extended
     // match globs defined in config
     const files = await globby(groups[group], { ignore }); // eslint-disable-line no-await-in-loop
 
-    const temp: GroupedCoverageSummary = { total: getDefaultCoverageSummary(), files: {} };
+    const groupedSummary: GroupedCoverageSummary = { total: { l: 0, f: 0, s: 0, b: 0 }, files: {} };
+    let totalCoverageSummary: CoverageSummary = {
+      lines: { total: 0, covered: 0, skipped: 0, pct: 0 },
+      functions: { total: 0, covered: 0, skipped: 0, pct: 0 },
+      statements: { total: 0, covered: 0, skipped: 0, pct: 0 },
+      branches: { total: 0, covered: 0, skipped: 0, pct: 0 }
+    };
 
     // for all the matched files, extract the coverage info
     files.forEach(file => {
+      // coverage report has absolute paths for files, hence we also generate one.
       const filepath = path.join(cwd, file);
-      if (filepath in coverage) {
-        temp.files[file] = coverage[filepath];
+
+      if (filepath in coverageData) {
+        const coverageSummary = coverageData[filepath];
+
+        // keep adding the values of coverage summaries
+        // in order to calculate the total coverage for group later
+        totalCoverageSummary = addCoverageSummaries(totalCoverageSummary, coverageSummary);
+
+        // capture the coverage for the file
+        groupedSummary.files[file] = pickCoveragePecentage(coverageSummary);
 
         // remove the file from coverage, so that we can detect uncategorized files
-        delete coverage[filepath];
+        delete coverageData[filepath];
       }
     });
 
-    temp.total = getTotalCoverage(temp.files);
+    // calculate the total coverage for group
+    groupedSummary.total = calculateCoveragePercentage(totalCoverageSummary);
 
-    // update the coverage
-    groupedCoverage[group] = temp;
+    // update the final coverage object
+    groupedCoverage[group] = groupedSummary;
   }
 
-  // collect all the uncategorized data
-  const uncategorizedSummary = Object.keys(coverage).reduce<Record<string, CoverageSummary>>((acc, key) => {
-    const filepath = path.relative(cwd, key);
-
-    acc[filepath] = coverage[key];
-
-    return acc;
-  }, {});
-
+  // create a category for uncategorized files
   groupedCoverage.uncategorized = {
-    total: getTotalCoverage(uncategorizedSummary),
-    files: uncategorizedSummary
+    total: { l: 0, f: 0, s: 0, b: 0 },
+    files: {}
   };
+
+  let totalUncategorizedCoverageSummary: CoverageSummary = {
+    lines: { total: 0, covered: 0, skipped: 0, pct: 0 },
+    functions: { total: 0, covered: 0, skipped: 0, pct: 0 },
+    statements: { total: 0, covered: 0, skipped: 0, pct: 0 },
+    branches: { total: 0, covered: 0, skipped: 0, pct: 0 }
+  };
+
+  // collect all the uncategorized data
+  for (const file of Object.keys(coverageData)) {
+    const filepath = path.relative(cwd, file);
+    const coverageSummary = coverageData[filepath];
+
+    totalUncategorizedCoverageSummary = addCoverageSummaries(totalUncategorizedCoverageSummary, coverageSummary);
+
+    groupedCoverage.uncategorized.files[file] = pickCoveragePecentage(coverageSummary);
+
+    groupedCoverage.uncategorized.total = calculateCoveragePercentage(totalUncategorizedCoverageSummary);
+  }
 
   return groupedCoverage;
 }

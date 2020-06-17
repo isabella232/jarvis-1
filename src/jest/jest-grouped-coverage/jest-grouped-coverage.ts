@@ -8,11 +8,12 @@ import mkdirp from 'mkdirp';
 import chalk from 'chalk';
 import _ from 'lodash';
 
-import groupData, { Config } from './groupData';
+import groupData from './groupData';
+import type { Config, CoveragePercentage } from './groupData';
 import configSchema from './config-schema.json';
 import coverageSchema from '../common/coverage-schema.json';
 import type { CoverageData } from '../common/helpers';
-import { getCoverageClass, getMaxPct, getCoverageClassForMaxPct } from '../common/helpers';
+import { getCoverageClass } from '../common/helpers';
 
 const ajv = new Ajv({ jsonPointers: true });
 
@@ -41,8 +42,17 @@ Handlebars.registerHelper('json', function (value: any) {
 });
 
 Handlebars.registerHelper('coverageClass', getCoverageClass);
-Handlebars.registerHelper('maxPct', getMaxPct);
-Handlebars.registerHelper('coverageClassForMaxPct', getCoverageClassForMaxPct);
+Handlebars.registerHelper('maxPct', function (value: CoveragePercentage) {
+  return Math.max(...Object.values(value));
+});
+Handlebars.registerHelper('coverageClassForMaxPct', function (value: CoveragePercentage) {
+  const max = Math.max(...Object.values(value));
+
+  return getCoverageClass(max);
+});
+
+const JSON_QUOTES_REGEX = /"([A-Za-z0-9]+)"\s*:/g;
+const JSON_QUOTES_REPLACER = '$1:';
 
 export default async function jestGroupedCoverageGenerator(options: Options): Promise<void> {
   try {
@@ -98,7 +108,26 @@ export default async function jestGroupedCoverageGenerator(options: Options): Pr
       path.resolve(__dirname, '../../assets/pure-min.css'),
       path.join(OUT_DIR, 'pure-min.css')
     );
-    await fs.promises.copyFile(path.resolve(__dirname, './table.js'), path.join(OUT_DIR, 'table.js'));
+
+    let jsContent = await fs.promises.readFile(path.resolve(__dirname, './table.js'), 'utf-8');
+
+    jsContent = jsContent.replace(
+      "'__COVERAGE_DATA__'",
+      JSON.stringify(groupedData).replace(JSON_QUOTES_REGEX, JSON_QUOTES_REPLACER) // removing quotes around keys to reduce the file size
+    );
+
+    const tableKeys = Object.keys(groupedData);
+    jsContent = jsContent.replace(
+      "'__COVERAGE_TABLE_MAP__'",
+      JSON.stringify(
+        _.zipObject(
+          tableKeys.map(str => 'table-' + _.kebabCase(str)),
+          tableKeys
+        )
+      ).replace(JSON_QUOTES_REGEX, JSON_QUOTES_REPLACER) // removing quotes around keys to reduce the file size
+    );
+
+    await fs.promises.writeFile(path.join(OUT_DIR, 'table.js'), jsContent, 'utf8');
     await fs.promises.copyFile(path.resolve(__dirname, './coverage.css'), path.join(OUT_DIR, 'coverage.css'));
 
     if (options.json) {

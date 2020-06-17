@@ -1,20 +1,22 @@
 (() => {
-  if (!window.__COVERAGE_DATA__) {
-    return;
-  }
+  const COVERAGE_DATA = '__COVERAGE_DATA__'; // this will be replaced by script
+  const ID_MAP = '__COVERAGE_TABLE_MAP__'; // this will be replaced by script
 
-  const coverageData = Object.keys(window.__COVERAGE_DATA__).reduce(
+  // if data replacement failed, bail early.
+  if (typeof COVERAGE_DATA === 'string' || typeof ID_MAP === 'string') return;
+
+  //
+  const coverageData = Object.keys(COVERAGE_DATA).reduce(
     (p, c) =>
       Object.assign(p, {
         [c]: {
-          total: window.__COVERAGE_DATA__[c].total,
-          files: Object.entries(window.__COVERAGE_DATA__[c].files)
+          total: COVERAGE_DATA[c].total,
+          files: Object.entries(COVERAGE_DATA[c].files)
         }
       }),
     {}
   );
-  const ID_MAP = window.__COVERAGE_TABLE_MAP__;
-  const columns = ['file', 'progress', 'statements', 'branches', 'functions', 'lines'];
+  const columns = ['file', 'progress', 's', 'b', 'f', 'l'];
 
   function getCoverageClass(value) {
     if (value < 50) return 'low';
@@ -27,11 +29,11 @@
   }
 
   function getMaxPct(value) {
-    return Math.max(value.lines.pct, value.functions.pct, value.statements.pct, value.branches.pct);
+    return Math.max(...Object.values(value));
   }
 
   function generateTable(table, files) {
-    const { id, tBodies } = table;
+    const { tBodies } = table;
     const tBody = tBodies[0];
 
     const fragment = document.createDocumentFragment();
@@ -49,7 +51,7 @@
             td.innerText = file;
             td.classList.add(maxCoverageClass);
             break;
-          case 'progress':
+          case 'progress': {
             const progress = document.createElement('progress');
             progress.classList.add('progress');
             progress.value = Math.round(maxPct);
@@ -57,9 +59,10 @@
             td.appendChild(progress);
             td.classList.add(maxCoverageClass);
             break;
+          }
           default:
-            td.innerText = coverage[col].pct;
-            td.classList.add(getCoverageClass(coverage[col].pct));
+            td.innerText = coverage[col];
+            td.classList.add(getCoverageClass(coverage[col]));
         }
 
         tr.appendChild(td);
@@ -98,7 +101,7 @@
         newSort = 'desc';
       }
 
-      const files = coverageData[ID_MAP[id]].files.sort(([fileA, coverageA], [fileB, coverageB]) => {
+      const sortedFiles = coverageData[ID_MAP[id]].files.sort(([fileA, coverageA], [fileB, coverageB]) => {
         switch (col) {
           case 'file':
             return newSort === 'asc' ? fileA.localeCompare(fileB) : fileB.localeCompare(fileA);
@@ -107,13 +110,11 @@
               ? getMaxPct(coverageA) - getMaxPct(coverageB)
               : getMaxPct(coverageB) - getMaxPct(coverageA);
           default:
-            return newSort === 'asc'
-              ? coverageA[col].pct - coverageB[col].pct
-              : coverageB[col].pct - coverageA[col].pct;
+            return newSort === 'asc' ? coverageA[col] - coverageB[col] : coverageB[col] - coverageA[col];
         }
       });
 
-      generateTable(table, files);
+      generateTable(table, sortedFiles);
       Array.from(table.tHead.rows).forEach(row =>
         Array.from(row.cells).forEach(cell => {
           console.log(cell !== th);
