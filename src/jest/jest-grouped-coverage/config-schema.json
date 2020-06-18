@@ -4,6 +4,12 @@
   "definitions": {
   },
   "properties": {
+    "deprecated": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
     "groups": {
       "additionalProperties": {
         "items": {

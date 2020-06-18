@@ -1,16 +1,19 @@
 import * as path from 'path';
 
-import globby from 'globby';
+import _ from 'lodash';
+import multimatch from 'multimatch';
 
 import type { CoverageSummary, Coverage, CoverageData } from '../common/helpers';
 
 export interface Config {
   groups: Record<string, string[]>;
   ignore?: string[];
+  deprecated?: string[];
 }
 
 export interface ExtendedConfig extends Config {
   cwd: string;
+  verbose: boolean;
 }
 
 export type CoveragePercentage = Record<'l' | 'f' | 'b' | 's', number>;
@@ -63,78 +66,84 @@ function pickCoveragePecentage(data: CoverageSummary): CoveragePercentage {
   };
 }
 
-export default async function groupData(coverageData: CoverageData, config: ExtendedConfig): Promise<GroupedCoverage> {
-  const { groups, ignore, cwd } = config;
-
-  delete coverageData.total; // remove total coverage
-
-  const groupKeys = Object.keys(groups); // extract all categories
-  const groupedCoverage: GroupedCoverage = {};
-
-  // loops over groups to categorize the files
-  for (const group of groupKeys) {
-    // match globs defined in config
-    const files = await globby(groups[group], { ignore }); // eslint-disable-line no-await-in-loop
-
-    const groupedSummary: GroupedCoverageSummary = { total: { l: 0, f: 0, s: 0, b: 0 }, files: {} };
-    let totalCoverageSummary: CoverageSummary = {
-      lines: { total: 0, covered: 0, skipped: 0, pct: 0 },
-      functions: { total: 0, covered: 0, skipped: 0, pct: 0 },
-      statements: { total: 0, covered: 0, skipped: 0, pct: 0 },
-      branches: { total: 0, covered: 0, skipped: 0, pct: 0 }
-    };
-
-    // for all the matched files, extract the coverage info
-    files.forEach(file => {
-      // coverage report has absolute paths for files, hence we also generate one.
-      const filepath = path.join(cwd, file);
-
-      if (filepath in coverageData) {
-        const coverageSummary = coverageData[filepath];
-
-        // keep adding the values of coverage summaries
-        // in order to calculate the total coverage for group later
-        totalCoverageSummary = addCoverageSummaries(totalCoverageSummary, coverageSummary);
-
-        // capture the coverage for the file
-        groupedSummary.files[file] = pickCoveragePecentage(coverageSummary);
-
-        // remove the file from coverage, so that we can detect uncategorized files
-        delete coverageData[filepath];
-      }
-    });
-
-    // calculate the total coverage for group
-    groupedSummary.total = calculateCoveragePercentage(totalCoverageSummary);
-
-    // update the final coverage object
-    groupedCoverage[group] = groupedSummary;
-  }
-
-  // create a category for uncategorized files
-  groupedCoverage.uncategorized = {
-    total: { l: 0, f: 0, s: 0, b: 0 },
-    files: {}
-  };
-
-  let totalUncategorizedCoverageSummary: CoverageSummary = {
+function getGroupedCoverageSummary(
+  files: string[],
+  coverageData: Record<string, CoverageSummary>
+): GroupedCoverageSummary {
+  const groupedSummary: GroupedCoverageSummary = { total: { l: 0, f: 0, s: 0, b: 0 }, files: {} };
+  let totalCoverageSummary: CoverageSummary = {
     lines: { total: 0, covered: 0, skipped: 0, pct: 0 },
     functions: { total: 0, covered: 0, skipped: 0, pct: 0 },
     statements: { total: 0, covered: 0, skipped: 0, pct: 0 },
     branches: { total: 0, covered: 0, skipped: 0, pct: 0 }
   };
 
-  // collect all the uncategorized data
-  for (const file of Object.keys(coverageData)) {
-    const filepath = path.relative(cwd, file);
-    const coverageSummary = coverageData[filepath];
+  // for all the matched files, extract the coverage info
+  files.forEach(file => {
+    // coverage report has absolute paths for files, hence we also generate one.
+    const coverageSummary = coverageData[file];
 
-    totalUncategorizedCoverageSummary = addCoverageSummaries(totalUncategorizedCoverageSummary, coverageSummary);
+    if (coverageSummary) {
+      // keep adding the values of coverage summaries
+      // in order to calculate the total coverage for group later
+      totalCoverageSummary = addCoverageSummaries(totalCoverageSummary, coverageSummary);
 
-    groupedCoverage.uncategorized.files[file] = pickCoveragePecentage(coverageSummary);
+      // capture the coverage for the file
+      groupedSummary.files[file] = pickCoveragePecentage(coverageSummary);
 
-    groupedCoverage.uncategorized.total = calculateCoveragePercentage(totalUncategorizedCoverageSummary);
+      // remove the file from coverage, so that we can detect uncategorized files
+      delete coverageData[file];
+    }
+  });
+
+  // calculate the total coverage for group
+  groupedSummary.total = calculateCoveragePercentage(totalCoverageSummary);
+
+  return groupedSummary;
+}
+
+export default function groupData(coverageData: CoverageData, config: ExtendedConfig): GroupedCoverage {
+  const { groups, ignore = [], deprecated = [], cwd, verbose } = config;
+
+  delete coverageData.total; // remove total coverage
+
+  // coverageData has absolute paths, convert them to relative
+  const coverageDataWithRelativePaths: Omit<CoverageData, 'total'> = _.mapKeys(coverageData, (_value, file) =>
+    path.relative(cwd, file)
+  );
+
+  // create a list of all files from the coverage data
+  const allFilesWithRelativePath = Object.keys(coverageDataWithRelativePaths);
+
+  // create new globs by adding negation to the globs, as they will be used to exclude files
+  const deprecatedNegativeGlobs = deprecated.map(pattern => `!${pattern}`);
+  const ignoredNegativeGlobs = ignore.map(pattern => `!${pattern}`);
+
+  // loop over the groups to create report
+  const groupedCoverage: GroupedCoverage = _.mapValues(groups, (globs, group) => {
+    if (verbose) console.log(`Generating report for group: ${group}`);
+
+    // pick files matching the globs
+    const files = multimatch(allFilesWithRelativePath, [...globs, ...ignoredNegativeGlobs, ...deprecatedNegativeGlobs]);
+
+    if (verbose) console.log(`Found ${files.length} files`);
+
+    return getGroupedCoverageSummary(files, coverageDataWithRelativePaths);
+  });
+
+  if (Array.isArray(deprecated) && deprecated.length > 0) {
+    if (verbose) console.log(`Generating report for deprecated files`);
+    const files = multimatch(allFilesWithRelativePath, [...deprecated, ...ignoredNegativeGlobs]);
+
+    if (verbose) console.log(`Found ${files.length} deprecated files`);
+    groupedCoverage.deprecated = getGroupedCoverageSummary(files, coverageDataWithRelativePaths);
   }
+
+  if (verbose) console.log(`Generating report for uncategorized files`);
+  // collect all the uncategorized data
+  const uncategorizedFiles = Object.keys(coverageDataWithRelativePaths);
+  if (verbose) console.log(`Found ${uncategorizedFiles.length} uncategorized files`);
+  groupedCoverage.uncategorized = getGroupedCoverageSummary(uncategorizedFiles, coverageDataWithRelativePaths);
 
   return groupedCoverage;
 }
