@@ -36,3 +36,16 @@ export function getCoverageClass(value: number): string {
 export function getMaxPct(value: CoverageSummary): number {
   return Math.max(value.lines.pct, value.functions.pct, value.statements.pct, value.branches.pct);
 }
+
+export function getCoverageEmoji(pct: string): string {
+  switch (pct) {
+    case 'high':
+      return '🟢';
+    case 'medium':
+      return '🟡';
+    case 'low':
+      return '🔴';
+    default:
+      return '';
+  }
+}

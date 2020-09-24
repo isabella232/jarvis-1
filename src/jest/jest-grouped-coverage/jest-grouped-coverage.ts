@@ -12,13 +12,20 @@ import groupData from './groupData';
 import type { Config, CoveragePercentage } from './groupData';
 import configSchema from './config-schema.json';
 import coverageSchema from '../common/coverage-schema.json';
-import type { CoverageData } from '../common/helpers';
+import { CoverageData, getCoverageEmoji } from '../common/helpers';
 import { getCoverageClass } from '../common/helpers';
 
 const ajv = new Ajv({ jsonPointers: true });
 
 const validateConfig = ajv.compile(configSchema);
 const validateCoverage = ajv.compile(coverageSchema);
+
+function getCoverageData(_pct: number): string {
+  const pct = getCoverageClass(_pct);
+  const emoji = getCoverageEmoji(pct);
+
+  return `${_pct} ${emoji}`.trim();
+}
 
 export interface Options {
   config: string;
@@ -112,6 +119,22 @@ export default async function jestGroupedCoverageGenerator(options: Options): Pr
       path.resolve(__dirname, '../../assets/pure-min.css'),
       path.join(OUT_DIR, 'pure-min.css')
     );
+
+    options.verbose && console.log('Generating Markdown...');
+    let mdOutput = `
+| Group | %Stmts | %Branch | %Funcs | %Lines |
+| :--- | -----: | ------: | -----: | -----: |
+`;
+
+    mdOutput += Object.entries(groupedData)
+      .map(
+        ([group, row]) =>
+          `| ${group} (${Object.entries(row.files).length} files) | ${getCoverageData(row.total.s)} | ${getCoverageData(
+            row.total.b
+          )} | ${getCoverageData(row.total.f)} | ${getCoverageData(row.total.l)} |`
+      )
+      .join('\n');
+    await fs.promises.writeFile(path.join(OUT_DIR, 'grouped_summary.md'), mdOutput, 'utf8');
 
     let jsContent = await fs.promises.readFile(path.resolve(__dirname, './table.js'), 'utf-8');
 

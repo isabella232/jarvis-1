@@ -1,20 +1,7 @@
 import * as path from 'path';
 
-import type { CoverageData, CoverageSummary, Coverage } from '../common/helpers';
+import { CoverageData, CoverageSummary, Coverage, getCoverageEmoji } from '../common/helpers';
 import { getCoverageClass, getCoverageClassForMaxPct } from '../common/helpers';
-
-function getCoverageEmoji(pct: string): string {
-  switch (pct) {
-    case 'high':
-      return '🟢';
-    case 'medium':
-      return '🟡';
-    case 'low':
-      return '🔴';
-    default:
-      return '';
-  }
-}
 
 function getCoverageData(data: Coverage): string {
   const pct = getCoverageClass(data.pct);
