@@ -12,7 +12,7 @@ import groupData from './groupData';
 import type { Config, CoveragePercentage } from './groupData';
 import configSchema from './config-schema.json';
 import coverageSchema from '../common/coverage-schema.json';
-import type { CoverageData } from '../common/helpers';
+import { CoverageData, getCoverageEmoji } from '../common/helpers';
 import { getCoverageClass } from '../common/helpers';
 
 const ajv = new Ajv({ jsonPointers: true });
@@ -20,11 +20,19 @@ const ajv = new Ajv({ jsonPointers: true });
 const validateConfig = ajv.compile(configSchema);
 const validateCoverage = ajv.compile(coverageSchema);
 
+function getCoverageData(_pct: number): string {
+  const pct = getCoverageClass(_pct);
+  const emoji = getCoverageEmoji(pct);
+
+  return `${_pct} ${emoji}`.trim();
+}
+
 export interface Options {
   config: string;
   input: string;
   output: string;
   cwd: string;
+  format: Array<'html' | 'md'>;
   json?: string | boolean;
   verbose?: boolean;
 }
@@ -95,44 +103,65 @@ export default async function jestGroupedCoverageGenerator(options: Options): Pr
       verbose: !!options.verbose
     });
 
-    options.verbose && console.log('Generating HTML...');
-    const template = Handlebars.compile(templateContent);
-    const outputData = template({ coverage: groupedData });
-
+    // Prepare output folder
     const OUT_DIR = path.resolve(process.cwd(), options.output);
-
     options.verbose && console.log('Removing old report...');
     await fs.promises.rmdir(OUT_DIR, { recursive: true });
-
     await mkdirp(OUT_DIR);
 
-    options.verbose && console.log('Writing report to disk...');
-    await fs.promises.writeFile(path.join(OUT_DIR, 'index.html'), outputData, 'utf8');
-    await fs.promises.copyFile(
-      path.resolve(__dirname, '../../assets/pure-min.css'),
-      path.join(OUT_DIR, 'pure-min.css')
-    );
+    if (options.format.includes('html')) {
+      // HTML report
+      options.verbose && console.log('Generating HTML...');
+      const template = Handlebars.compile(templateContent);
+      const outputData = template({ coverage: groupedData });
 
-    let jsContent = await fs.promises.readFile(path.resolve(__dirname, './table.js'), 'utf-8');
+      options.verbose && console.log('Writing report to disk...');
+      await fs.promises.writeFile(path.join(OUT_DIR, 'index.html'), outputData, 'utf8');
+      await fs.promises.copyFile(
+        path.resolve(__dirname, '../../assets/pure-min.css'),
+        path.join(OUT_DIR, 'pure-min.css')
+      );
 
-    jsContent = jsContent.replace(
-      "'__COVERAGE_DATA__'",
-      JSON.stringify(groupedData).replace(JSON_QUOTES_REGEX, JSON_QUOTES_REPLACER) // removing quotes around keys to reduce the file size
-    );
+      let jsContent = await fs.promises.readFile(path.resolve(__dirname, './table.js'), 'utf-8');
 
-    const tableKeys = Object.keys(groupedData);
-    jsContent = jsContent.replace(
-      "'__COVERAGE_TABLE_MAP__'",
-      JSON.stringify(
-        _.zipObject(
-          tableKeys.map(str => 'table-' + _.kebabCase(str)),
-          tableKeys
+      jsContent = jsContent.replace(
+        "'__COVERAGE_DATA__'",
+        JSON.stringify(groupedData).replace(JSON_QUOTES_REGEX, JSON_QUOTES_REPLACER) // removing quotes around keys to reduce the file size
+      );
+
+      const tableKeys = Object.keys(groupedData);
+      jsContent = jsContent.replace(
+        "'__COVERAGE_TABLE_MAP__'",
+        JSON.stringify(
+          _.zipObject(
+            tableKeys.map(str => 'table-' + _.kebabCase(str)),
+            tableKeys
+          )
+        ).replace(JSON_QUOTES_REGEX, JSON_QUOTES_REPLACER) // removing quotes around keys to reduce the file size
+      );
+
+      await fs.promises.writeFile(path.join(OUT_DIR, 'table.js'), jsContent, 'utf8');
+      await fs.promises.copyFile(path.resolve(__dirname, './coverage.css'), path.join(OUT_DIR, 'coverage.css'));
+    }
+
+    if (options.format.includes('md')) {
+      // Markdown report
+      options.verbose && console.log('Generating Markdown...');
+      let mdOutput = `
+| Group | %Stmts | %Branch | %Funcs | %Lines |
+| :--- | -----: | ------: | -----: | -----: |
+`;
+      mdOutput += Object.entries(groupedData)
+        .map(
+          ([group, row]) =>
+            `| ${group} (${Object.entries(row.files).length} files) | ${getCoverageData(
+              row.total.s
+            )} | ${getCoverageData(row.total.b)} | ${getCoverageData(row.total.f)} | ${getCoverageData(row.total.l)} |`
         )
-      ).replace(JSON_QUOTES_REGEX, JSON_QUOTES_REPLACER) // removing quotes around keys to reduce the file size
-    );
+        .join('\n');
 
-    await fs.promises.writeFile(path.join(OUT_DIR, 'table.js'), jsContent, 'utf8');
-    await fs.promises.copyFile(path.resolve(__dirname, './coverage.css'), path.join(OUT_DIR, 'coverage.css'));
+      await fs.promises.writeFile(path.join(OUT_DIR, 'grouped_summary.md'), mdOutput, 'utf8');
+    }
 
     if (options.json) {
       const jsonFile = typeof options.json === 'string' ? options.json : 'summary.json';

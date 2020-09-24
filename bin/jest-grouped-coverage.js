@@ -23,6 +23,12 @@ require('yargs')
           describe: 'Output path for the report',
           default: 'coverage/grouped-coverage-report'
         })
+        .option('f', {
+          alias: 'format',
+          type: 'array',
+          describe: 'Output format of the report (html/md)',
+          default: ['html']
+        })
         .option('cwd', {
           describe:
             'Convert absolute paths to relative paths (w.r.t to this path), within the reports. Default is `process.cwd()`',
