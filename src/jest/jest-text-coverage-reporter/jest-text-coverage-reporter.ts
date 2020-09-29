@@ -46,9 +46,6 @@ export default async function jestTextCoverageReporter(options: Options): Promis
 
     const OUTPUT_PATH = path.resolve(process.cwd(), options.output);
 
-    // options.verbose && console.log('Removing old report...');
-    // await fs.promises.rmdir(OUT_DIR, { recursive: true });
-
     await mkdirp(path.dirname(OUTPUT_PATH));
 
     options.verbose && console.log('Writing report to disk...');

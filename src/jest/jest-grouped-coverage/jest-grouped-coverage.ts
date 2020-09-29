@@ -105,11 +105,16 @@ export default async function jestGroupedCoverageGenerator(options: Options): Pr
 
     // Prepare output folder
     const OUT_DIR = path.resolve(process.cwd(), options.output);
-    options.verbose && console.log('Removing old report...');
-    await fs.promises.rmdir(OUT_DIR, { recursive: true });
-    await mkdirp(OUT_DIR);
 
     if (options.format.includes('html')) {
+      const filesToRemove = ['index.html', 'pure-min.css', 'table.js', 'coverage.css'];
+      options.verbose && console.log('Removing old report...');
+      for (const file of filesToRemove) {
+        // eslint-disable-next-line no-await-in-loop
+        await fs.promises.unlink(path.resolve(OUT_DIR, file));
+      }
+      await mkdirp(OUT_DIR);
+
       // HTML report
       options.verbose && console.log('Generating HTML...');
       const template = Handlebars.compile(templateContent);

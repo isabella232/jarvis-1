@@ -1,6 +1,6 @@
 {
   "name": "@wings-software/jarvis",
-  "version": "0.8.4",
+  "version": "0.9.0",
   "license": "UNLICENSED",
   "files": [
     "bin",
@@ -22,32 +22,32 @@
   },
   "peerDependencies": {},
   "dependencies": {
-    "ajv": "^6.12.2",
+    "ajv": "^6.12.5",
     "better-ajv-errors": "^0.6.7",
-    "chalk": "^4.0.0",
+    "chalk": "^4.1.0",
     "copyfiles": "^2.3.0",
     "globby": "^11.0.1",
     "handlebars": "^4.7.6",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.20",
     "mkdirp": "^1.0.4",
     "multimatch": "^4.0.0",
-    "tslib": "^2.0.0",
-    "yargs": "^15.3.1"
+    "tslib": "^2.0.1",
+    "yargs": "^16.0.3"
   },
   "devDependencies": {
     "@types/handlebars": "^4.1.0",
-    "@types/lodash": "^4.14.155",
-    "@types/mkdirp": "^1.0.0",
-    "@types/webpack": "^4.41.17",
-    "@typescript-eslint/eslint-plugin": "^3.1.0",
-    "@typescript-eslint/parser": "^3.1.0",
-    "eslint": "^7.1.0",
-    "eslint-config-prettier": "^6.11.0",
-    "husky": "^4.2.5",
-    "lint-staged": "^10.2.7",
-    "prettier": "^2.0.5",
-    "ts-json-schema-generator": "^0.70.1",
-    "typescript": "^3.9.3"
+    "@types/lodash": "^4.14.161",
+    "@types/mkdirp": "^1.0.1",
+    "@types/webpack": "^4.41.22",
+    "@typescript-eslint/eslint-plugin": "^4.3.0",
+    "@typescript-eslint/parser": "^4.3.0",
+    "eslint": "^7.10.0",
+    "eslint-config-prettier": "^6.12.0",
+    "husky": "^4.3.0",
+    "lint-staged": "^10.4.0",
+    "prettier": "^2.1.2",
+    "ts-json-schema-generator": "^0.74.0",
+    "typescript": "^4.0.3"
   },
   "optionalDependencies": {
     "webpack": "^4.0.0"
