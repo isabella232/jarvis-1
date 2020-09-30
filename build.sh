@@ -1,3 +1,4 @@
+#!/bin/bash
 TYPES_TO_JSON_SCHEMA=(
   'src/jest/common/helpers.ts:CoverageData:src/jest/common/coverage-schema.json'
   'src/jest/jest-grouped-coverage/groupData.ts:Config:src/jest/jest-grouped-coverage/config-schema.json'
