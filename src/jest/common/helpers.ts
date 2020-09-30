@@ -13,7 +13,6 @@ export interface CoverageSummary {
 }
 
 export interface CoverageData {
-  total: CoverageSummary;
   [key: string]: CoverageSummary;
 }
 
