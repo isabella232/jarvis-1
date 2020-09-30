@@ -1,6 +1,6 @@
 {
   "name": "@wings-software/jarvis",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "license": "UNLICENSED",
   "files": [
     "bin",

@@ -17,13 +17,13 @@ jobs:
         with:
           node-version: '14.8'
           registry-url: 'https://npm.pkg.github.com'
-      # - name: Set up GitHub Package Registry token
-      #   run: |
-      #     echo @wings-software:registry=https://npm.pkg.github.com > .npmrc
-      #     echo "//npm.pkg.github.com/:_authToken="$GIT_BOT_TOKEN >> .npmrc
-      #     echo always-auth=true >> .npmrc
-      #   env:
-      #     GIT_BOT_TOKEN: ${{ secrets.GIT_BOT_TOKEN }}
+      - name: Set up GitHub Package Registry token
+        run: |
+          echo @wings-software:registry=https://npm.pkg.github.com > .npmrc
+          echo "//npm.pkg.github.com/:_authToken="$GIT_BOT_TOKEN >> .npmrc
+          echo always-auth=true >> .npmrc
+        env:
+          GIT_BOT_TOKEN: ${{ secrets.GIT_BOT_TOKEN }}
       - name: Cache node_modules
         uses: actions/cache@v1
         with:
@@ -34,10 +34,7 @@ jobs:
       - name: Install Packages
         run: yarn
 
-      - name: Build
-        run: yarn build
-
-      - name: Publish
+      - name: Build and Publish
         run: yarn publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GIT_BOT_TOKEN }}
