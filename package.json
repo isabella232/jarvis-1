@@ -13,7 +13,9 @@
     "typecheck-staged": "bin/typecheck-staged.sh"
   },
   "scripts": {
+    "lint": "eslint --ext .ts --ext .tsx src",
     "test": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf lib",
     "prepublishOnly": "yarn build",
     "build": "yarn clean && ./build.sh && tsc && copyfiles -e '**/*.ts' -u 1 'src/**/*.*' lib"
