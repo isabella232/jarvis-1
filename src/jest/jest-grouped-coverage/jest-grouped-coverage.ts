@@ -12,20 +12,13 @@ import groupData from './groupData';
 import type { Config, CoveragePercentage } from './groupData';
 import configSchema from './config-schema.json';
 import coverageSchema from '../common/coverage-schema.json';
-import { CoverageData, getCoverageEmoji } from '../common/helpers';
-import { getCoverageClass } from '../common/helpers';
+import type { CoverageData } from '../common/helpers';
+import { getCoverageClass, getCoverageEmoji } from '../common/helpers';
 
 const ajv = new Ajv({ jsonPointers: true });
 
 const validateConfig = ajv.compile(configSchema);
 const validateCoverage = ajv.compile(coverageSchema);
-
-function getCoverageData(_pct: number): string {
-  const pct = getCoverageClass(_pct);
-  const emoji = getCoverageEmoji(pct);
-
-  return `${_pct} ${emoji}`.trim();
-}
 
 export interface Options {
   config: string;
@@ -35,6 +28,7 @@ export interface Options {
   format: Array<'html' | 'md'>;
   json?: string | boolean;
   verbose?: boolean;
+  up: number;
 }
 
 Handlebars.registerHelper('kebabCase', function (value: string) {
@@ -50,13 +44,19 @@ Handlebars.registerHelper('json', function (value: any) {
 });
 
 Handlebars.registerHelper('coverageClass', getCoverageClass);
+
 Handlebars.registerHelper('maxPct', function (value: CoveragePercentage) {
   return Math.max(...Object.values(value));
 });
+
 Handlebars.registerHelper('coverageClassForMaxPct', function (value: CoveragePercentage) {
   const max = Math.max(...Object.values(value));
 
   return getCoverageClass(max);
+});
+
+Handlebars.registerHelper('coverageEmoji', function (value: number) {
+  return `${Math.floor(value)} ${getCoverageEmoji(getCoverageClass(value))}`;
 });
 
 const JSON_QUOTES_REGEX = /"([A-Za-z0-9]+)"\s*:/g;
@@ -65,8 +65,9 @@ const JSON_QUOTES_REPLACER = '$1:';
 export default async function jestGroupedCoverageGenerator(options: Options): Promise<void> {
   try {
     console.log(chalk.white.bold('Generating Report...'));
-    const [templateContent, configContent, inputContent] = await Promise.all([
-      fs.promises.readFile(path.join(__dirname, 'template.hbs'), 'utf8'),
+    const [htmlTemplateContent, mdTemplateContent, configContent, inputContent] = await Promise.all([
+      fs.promises.readFile(path.join(__dirname, 'templates', 'html.hbs'), 'utf8'),
+      fs.promises.readFile(path.join(__dirname, 'templates', 'md.hbs'), 'utf8'),
       fs.promises.readFile(path.resolve(process.cwd(), options.config), 'utf8'),
       fs.promises.readFile(path.resolve(process.cwd(), options.input), 'utf8')
     ]);
@@ -97,14 +98,17 @@ export default async function jestGroupedCoverageGenerator(options: Options): Pr
     }
 
     options.verbose && console.log('Computing coverage...');
-    const groupedData = groupData(coverage, {
+    const groupedData = groupData(_.cloneDeep(coverage), {
       ...config,
       cwd: options.cwd,
-      verbose: !!options.verbose
+      verbose: !!options.verbose,
+      up: options.up
     });
 
     // Prepare output folder
     const OUT_DIR = path.resolve(process.cwd(), options.output);
+
+    await mkdirp(OUT_DIR);
 
     if (options.format.includes('html')) {
       const filesToRemove = ['index.html', 'pure-min.css', 'table.js', 'coverage.css'];
@@ -113,11 +117,10 @@ export default async function jestGroupedCoverageGenerator(options: Options): Pr
         // eslint-disable-next-line no-await-in-loop
         await fs.promises.unlink(path.resolve(OUT_DIR, file));
       }
-      await mkdirp(OUT_DIR);
 
       // HTML report
       options.verbose && console.log('Generating HTML...');
-      const template = Handlebars.compile(templateContent);
+      const template = Handlebars.compile(htmlTemplateContent);
       const outputData = template({ coverage: groupedData });
 
       options.verbose && console.log('Writing report to disk...');
@@ -152,18 +155,14 @@ export default async function jestGroupedCoverageGenerator(options: Options): Pr
     if (options.format.includes('md')) {
       // Markdown report
       options.verbose && console.log('Generating Markdown...');
-      let mdOutput = `
-| Group | %Stmts | %Branch | %Funcs | %Lines |
-| :--- | -----: | ------: | -----: | -----: |
-`;
-      mdOutput += Object.entries(groupedData)
-        .map(
-          ([group, row]) =>
-            `| ${group} (${Object.entries(row.files).length} files) | ${getCoverageData(
-              row.total.s
-            )} | ${getCoverageData(row.total.b)} | ${getCoverageData(row.total.f)} | ${getCoverageData(row.total.l)} |`
+      const template = Handlebars.compile(mdTemplateContent);
+      const mdOutput = template({
+        coverage: groupedData,
+        actualCoverage: _.mapKeys(
+          _.mapValues(coverage.total, ({ pct }) => Math.floor(pct)),
+          (_v, key) => key.toString().slice(0, 1)
         )
-        .join('\n');
+      });
 
       await fs.promises.writeFile(path.join(OUT_DIR, 'grouped_summary.md'), mdOutput, 'utf8');
     }

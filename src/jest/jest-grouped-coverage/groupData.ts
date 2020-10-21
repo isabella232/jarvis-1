@@ -14,6 +14,7 @@ export interface Config {
 export interface ExtendedConfig extends Config {
   cwd: string;
   verbose: boolean;
+  up: number;
 }
 
 export type CoveragePercentage = Record<'l' | 'f' | 'b' | 's', number>;
@@ -68,7 +69,8 @@ function pickCoveragePecentage(data: CoverageSummary): CoveragePercentage {
 
 function getGroupedCoverageSummary(
   files: string[],
-  coverageData: Record<string, CoverageSummary>
+  coverageData: Record<string, CoverageSummary>,
+  config: ExtendedConfig
 ): GroupedCoverageSummary {
   const groupedSummary: GroupedCoverageSummary = { total: { l: 0, f: 0, s: 0, b: 0 }, files: {} };
   let totalCoverageSummary: CoverageSummary = {
@@ -87,9 +89,10 @@ function getGroupedCoverageSummary(
       // keep adding the values of coverage summaries
       // in order to calculate the total coverage for group later
       totalCoverageSummary = addCoverageSummaries(totalCoverageSummary, coverageSummary);
+      const key = file.split(path.sep).slice(config.up).join(path.sep);
 
       // capture the coverage for the file
-      groupedSummary.files[file] = pickCoveragePecentage(coverageSummary);
+      groupedSummary.files[key] = pickCoveragePecentage(coverageSummary);
 
       // remove the file from coverage, so that we can detect uncategorized files
       delete coverageData[file];
@@ -128,7 +131,7 @@ export default function groupData(coverageData: CoverageData, config: ExtendedCo
 
     if (verbose) console.log(`Found ${files.length} files`);
 
-    return getGroupedCoverageSummary(files, coverageDataWithRelativePaths);
+    return getGroupedCoverageSummary(files, coverageDataWithRelativePaths, config);
   });
 
   if (Array.isArray(deprecated) && deprecated.length > 0) {
@@ -136,14 +139,14 @@ export default function groupData(coverageData: CoverageData, config: ExtendedCo
     const files = multimatch(allFilesWithRelativePath, [...deprecated, ...ignoredNegativeGlobs]);
 
     if (verbose) console.log(`Found ${files.length} deprecated files`);
-    groupedCoverage.deprecated = getGroupedCoverageSummary(files, coverageDataWithRelativePaths);
+    groupedCoverage.deprecated = getGroupedCoverageSummary(files, coverageDataWithRelativePaths, config);
   }
 
   if (verbose) console.log(`Generating report for uncategorized files`);
   // collect all the uncategorized data
   const uncategorizedFiles = Object.keys(coverageDataWithRelativePaths);
   if (verbose) console.log(`Found ${uncategorizedFiles.length} uncategorized files`);
-  groupedCoverage.uncategorized = getGroupedCoverageSummary(uncategorizedFiles, coverageDataWithRelativePaths);
+  groupedCoverage.uncategorized = getGroupedCoverageSummary(uncategorizedFiles, coverageDataWithRelativePaths, config);
 
   return groupedCoverage;
 }

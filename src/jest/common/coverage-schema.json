@@ -53,13 +53,5 @@
       "type": "object"
     }
   },
-  "properties": {
-    "total": {
-      "$ref": "#/definitions/CoverageSummary"
-    }
-  },
-  "required": [
-    "total"
-  ],
   "type": "object"
 }
