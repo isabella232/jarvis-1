@@ -115,4 +115,4 @@ jobs:
         run: yarn
 
       - name: Prettier format check
-        run: npx prettier src --check --ignore-unknown
+        run: yarn pretty
