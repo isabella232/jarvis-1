@@ -19,7 +19,8 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf lib",
     "prepublishOnly": "yarn build",
-    "build": "yarn clean && ./build.sh && tsc && copyfiles -e '**/*.ts' -u 1 'src/**/*.*' lib"
+    "build": "yarn clean && ./build.sh && tsc && copyfiles -e '**/*.ts' -u 1 'src/**/*.*' lib",
+    "postbuild": "prettier src --write --ignore-unknown"
   },
   "peerDependencies": {},
   "dependencies": {

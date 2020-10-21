@@ -115,19 +115,22 @@ export default function groupData(coverageData: CoverageData, config: ExtendedCo
     path.relative(cwd, file)
   );
 
-  // create a list of all files from the coverage data
-  const allFilesWithRelativePath = Object.keys(coverageDataWithRelativePaths);
-
   // create new globs by adding negation to the globs, as they will be used to exclude files
   const deprecatedNegativeGlobs = deprecated.map(pattern => `!${pattern}`);
-  const ignoredNegativeGlobs = ignore.map(pattern => `!${pattern}`);
+
+  // remove ignored files completely
+  const filesToIgnore = multimatch(Object.keys(coverageDataWithRelativePaths), ignore);
+  filesToIgnore.forEach(file => delete coverageDataWithRelativePaths[file]);
+
+  // create a list of all files from the coverage data
+  const allFilesWithRelativePath = Object.keys(coverageDataWithRelativePaths);
 
   // loop over the groups to create report
   const groupedCoverage: GroupedCoverage = _.mapValues(groups, (globs, group) => {
     if (verbose) console.log(`Generating report for group: ${group}`);
 
     // pick files matching the globs
-    const files = multimatch(allFilesWithRelativePath, [...globs, ...ignoredNegativeGlobs, ...deprecatedNegativeGlobs]);
+    const files = multimatch(allFilesWithRelativePath, [...globs, ...deprecatedNegativeGlobs]);
 
     if (verbose) console.log(`Found ${files.length} files`);
 
@@ -136,7 +139,7 @@ export default function groupData(coverageData: CoverageData, config: ExtendedCo
 
   if (Array.isArray(deprecated) && deprecated.length > 0) {
     if (verbose) console.log(`Generating report for deprecated files`);
-    const files = multimatch(allFilesWithRelativePath, [...deprecated, ...ignoredNegativeGlobs]);
+    const files = multimatch(allFilesWithRelativePath, deprecated);
 
     if (verbose) console.log(`Found ${files.length} deprecated files`);
     groupedCoverage.deprecated = getGroupedCoverageSummary(files, coverageDataWithRelativePaths, config);
