@@ -37,6 +37,12 @@ require('yargs')
         .option('json', {
           describe: 'export result in JSON format in output directory'
         })
+        .option('u', {
+          alias: 'up',
+          describe: 'Slice a path off the start of the paths',
+          number: true,
+          default: 0
+        })
         .option('verbose', {
           describe: 'Show verbose output'
         });

@@ -1,0 +1,38 @@
+## Total Coverage Summary
+
+| %Stmts                    | %Branch                   | %Funcs                    | %Lines                    |
+| ------------------------: | ------------------------: | ------------------------: | ------------------------: |
+| {{coverageEmoji actualCoverage.l }} | {{coverageEmoji actualCoverage.b }} | {{coverageEmoji actualCoverage.f }} | {{coverageEmoji actualCoverage.l }} |
+
+## Grouped Coverage Summary
+
+| Group    | %Stmts                          | %Branch                         | %Funcs                          | %Lines                          |
+| :------- | ------------------------------: | ------------------------------: | ------------------------------: | ------------------------------: |
+{{#each coverage}}
+| {{@key}} | {{coverageEmoji this.total.s }} | {{coverageEmoji this.total.b }} | {{coverageEmoji this.total.f }} | {{coverageEmoji this.total.l }} |
+{{/each}}
+
+{{#each coverage}}
+
+## Group - {{@key}} Summary
+
+| Metric     | Coverage%                        |
+| :--------- | -------------------------------: |
+| Statements | {{coverageEmoji this.total.s }}  |
+| Branches   | {{coverageEmoji this.total.b }}  |
+| Functions  | {{coverageEmoji this.total.f }}  |
+| Lines      | {{coverageEmoji this.total.l }}  |
+
+
+<details>
+  <summary>{{objectLength this.files }} Files</summary>
+
+  | File       | %Stmts                    | %Branch                   | %Funcs                    | %Lines                    |
+  | :--------- | ------------------------: | ------------------------: | ------------------------: | ------------------------: |
+  {{#each this.files}}
+  | {{ @key }} | {{coverageEmoji this.s }} | {{coverageEmoji this.b }} | {{coverageEmoji this.f }} | {{coverageEmoji this.l }} |
+  {{/each}}
+
+</details>
+
+{{/each}}
