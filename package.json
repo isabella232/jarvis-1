@@ -1,6 +1,6 @@
 {
   "name": "@wings-software/jarvis",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "license": "UNLICENSED",
   "files": [
     "bin",
@@ -19,7 +19,8 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf lib",
     "prepublishOnly": "yarn build",
-    "build": "yarn clean && ./build.sh && tsc && copyfiles -e '**/*.ts' -u 1 'src/**/*.*' lib"
+    "build": "yarn clean && ./build.sh && tsc && copyfiles -e '**/*.ts' -u 1 'src/**/*.*' lib",
+    "postbuild": "prettier src --write --ignore-unknown"
   },
   "peerDependencies": {},
   "dependencies": {
