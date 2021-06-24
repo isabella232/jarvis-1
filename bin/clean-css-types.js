@@ -15,7 +15,7 @@ require('yargs')
           array: true,
           default: ['.css']
         })
-        .check((argv, opt) => {
+        .check(argv => {
           if (!argv.ext.every(ext => ext.startsWith('.'))) {
             throw new Error('An --ext option must start with a "."');
           }

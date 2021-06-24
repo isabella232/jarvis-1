@@ -1,0 +1,2 @@
+#!/bin/sh
+node ./scripts/lint-commit-message.js "$(cat "$1")"
