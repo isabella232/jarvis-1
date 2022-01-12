@@ -37,7 +37,7 @@
     "copyfiles": "^2.3.0",
     "globby": "^11.0.1",
     "handlebars": "^4.7.7",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "mkdirp": "^1.0.4",
     "multimatch": "^4.0.0",
     "tslib": "^2.0.1",
