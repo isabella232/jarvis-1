@@ -36,7 +36,7 @@
     "chalk": "^4.1.0",
     "copyfiles": "^2.3.0",
     "globby": "^11.0.1",
-    "handlebars": "^4.7.6",
+    "handlebars": "^4.7.7",
     "lodash": "^4.17.20",
     "mkdirp": "^1.0.4",
     "multimatch": "^4.0.0",
