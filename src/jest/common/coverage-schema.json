@@ -20,7 +20,12 @@
           "type": "number"
         }
       },
-      "required": ["total", "covered", "skipped", "pct"],
+      "required": [
+        "total",
+        "covered",
+        "skipped",
+        "pct"
+      ],
       "type": "object"
     },
     "CoverageSummary": {
@@ -39,7 +44,12 @@
           "$ref": "#/definitions/Coverage"
         }
       },
-      "required": ["lines", "statements", "functions", "branches"],
+      "required": [
+        "lines",
+        "statements",
+        "functions",
+        "branches"
+      ],
       "type": "object"
     }
   },

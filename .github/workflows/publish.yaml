@@ -20,7 +20,7 @@ jobs:
           node-version: '14.8'
       - name: Set up GitHub Package Registry token
         run: |
-          echo @wings-software:registry=https://npm.pkg.github.com > .npmrc
+          echo @harness:registry=https://npm.pkg.github.com > .npmrc
           echo "//npm.pkg.github.com/:_authToken="$GIT_BOT_TOKEN >> .npmrc
           echo always-auth=true >> .npmrc
         env:
@@ -54,4 +54,3 @@ jobs:
             -H "Authorization: token ${{ secrets.GIT_BOT_TOKEN }}" \
             -d "$BODY" \
             -X POST "https://api.github.com/repos/${{ github.repository }}/releases"
-
