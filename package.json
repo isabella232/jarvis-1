@@ -2,6 +2,10 @@
   "name": "@harness/jarvis",
   "version": "0.11.0",
   "license": "UNLICENSED",
+  "repository": {
+    "url": "https://github.com/harness/jarvis.git",
+    "type": "git"
+  },
   "files": [
     "bin",
     "lib"
