@@ -1,6 +1,6 @@
 {
   "name": "@harness/jarvis",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "license": "UNLICENSED",
   "repository": {
     "url": "https://github.com/harness/jarvis.git",
@@ -15,6 +15,9 @@
     "jest-text-coverage-reporter": "bin/jest-text-coverage-reporter.js",
     "clean-css-types": "bin/clean-css-types.js",
     "typecheck-staged": "bin/typecheck-staged.sh"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   },
   "scripts": {
     "lint": "eslint --ext .ts --ext .tsx src",
