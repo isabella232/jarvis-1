@@ -26,6 +26,7 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf lib",
     "prepublishOnly": "yarn build",
+    "prepare": "husky install",
     "build": "yarn clean && ./build.sh && tsc && copyfiles -e '**/*.ts' -u 1 'src/**/*.*' lib",
     "postbuild": "prettier src --write --ignore-unknown"
   },
@@ -52,7 +53,7 @@
     "@typescript-eslint/parser": "^4.3.0",
     "eslint": "^7.10.0",
     "eslint-config-prettier": "^6.12.0",
-    "husky": "^4.3.0",
+    "husky": "^6.0.0",
     "lint-staged": "^10.4.0",
     "prettier": "^2.1.2",
     "ts-json-schema-generator": "^0.74.0",
@@ -65,6 +66,9 @@
     "node": ">=13.8.0"
   },
   "lint-staged": {
+    "*": [
+      "sh scripts/license/stamp.sh"
+    ],
     "*.{ts,tsx}": [
       "eslint",
       "sh bin/typecheck-staged.sh",
