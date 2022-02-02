@@ -2,4 +2,13 @@ This repo contains code used in the [Harness CD Community Edition](https://githu
 
 # Jarvis
 
-Tooling for UI Repos
+Jarvis is a collection of utilities for UI codebases, which are used in Harness
+
+The included utilities are as follows:
+
+- `clean-css-types`: Utility for cleaning up old `.d.ts` files associated with CSS files.
+- `jest-grouped-coverage`: Utility for grouping jest coverage based on globs from Jest's JSON summary report.
+- `jest-text-coverage-report`: Utility for generating jest coverage report in text format from Jest's JSON summary report.
+- `new-files-coverage-check`: Utility for checking coverage of new files added in commit from Jest's JSON summary report.
+
+You can check the documentation for each utility individaully in `docs` folder
