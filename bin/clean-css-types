@@ -1,14 +1,15 @@
-/*
- * Copyright 2020 Harness Inc. All rights reserved.
- * Use of this source code is governed by the PolyForm Shield 1.0.0 license
- * that can be found in the licenses directory at the root of this repository, also available at
- * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
- */
-
 #!/usr/bin/env node
+
+// Copyright 2022 Harness Inc. All rights reserved.
+// Use of this source code is governed by the PolyForm Shield 1.0.0 license
+// that can be found in the licenses directory at the root of this repository, also available at
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+
+const yargs = require('yargs/yargs');
+const { hideBin } = require('yargs/helpers');
 const cleanCssTypes = require('../lib/misc/clean-css-types').default;
 
-require('yargs')
+yargs(hideBin(process.argv))
   .scriptName('clean-css-types')
   .command(
     '$0 <path> [args]',
@@ -30,4 +31,5 @@ require('yargs')
         });
     },
     cleanCssTypes
-  ).argv;
+  )
+  .parse();
