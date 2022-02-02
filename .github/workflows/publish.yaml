@@ -17,7 +17,7 @@ jobs:
       - name: Set Up Node
         uses: actions/setup-node@v1
         with:
-          node-version: '14.8'
+          node-version: '14.13.1'
       - name: Set up GitHub Package Registry token
         run: |
           echo @harness:registry=https://npm.pkg.github.com > .npmrc
