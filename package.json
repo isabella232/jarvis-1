@@ -1,6 +1,6 @@
 {
   "name": "@harness/jarvis",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "license": "UNLICENSED",
   "repository": {
     "url": "https://github.com/harness/jarvis.git",
@@ -11,10 +11,11 @@
     "lib"
   ],
   "bin": {
-    "jest-grouped-coverage": "bin/jest-grouped-coverage.js",
-    "jest-text-coverage-reporter": "bin/jest-text-coverage-reporter.js",
-    "clean-css-types": "bin/clean-css-types.js",
-    "typecheck-staged": "bin/typecheck-staged.sh"
+    "jest-grouped-coverage": "bin/jest-grouped-coverage",
+    "jest-text-coverage-reporter": "bin/jest-text-coverage-reporter",
+    "clean-css-types": "bin/clean-css-types",
+    "typecheck-staged": "bin/typecheck-staged.sh",
+    "new-files-coverage-check": "bin/new-files-coverage-check"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
@@ -42,7 +43,8 @@
     "mkdirp": "^1.0.4",
     "multimatch": "^4.0.0",
     "tslib": "^2.0.1",
-    "yargs": "^17.3.1"
+    "yargs": "^17.3.1",
+    "zx": "^4.3.0"
   },
   "devDependencies": {
     "@types/handlebars": "^4.1.0",
@@ -57,8 +59,7 @@
     "lint-staged": "^10.4.0",
     "prettier": "^2.1.2",
     "ts-json-schema-generator": "^0.74.0",
-    "typescript": "^4.0.3",
-    "zx": "^4.3.0"
+    "typescript": "^4.0.3"
   },
   "optionalDependencies": {
     "webpack": "^4.0.0"
