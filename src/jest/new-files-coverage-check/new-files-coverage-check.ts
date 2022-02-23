@@ -6,7 +6,7 @@
  */
 
 import chalk from 'chalk';
-import { $ } from 'zx';
+import { $, fetch } from 'zx';
 import * as fs from 'fs';
 import * as path from 'path';
 import multimatch from 'multimatch';
@@ -17,15 +17,37 @@ export interface Options {
   input: string;
   verbose: boolean;
   e: string[];
+  owner: string;
+  reponame: string;
+  pull_number: string;
+  token: string;
 }
 
-const getNewFiles = async (baseBranch: string, globs: string[]): Promise<string[]> => {
+const getNewFiles = async (
+  owner: string,
+  repoName: string,
+  pull_number: string,
+  globs: string[],
+  token: string
+): Promise<string[]> => {
   try {
-    const files = await $`git diff ${baseBranch} --name-status | grep '^A' | cut -c 3-`;
-    const splitted = `${files}`.split('\n').filter(Boolean);
-    return multimatch(splitted, ['**', ...globs]);
+    const headers = token ? { Authorization: `token ${token}` } : undefined;
+    // eslint-disable-next-line
+    // @ts-ignore
+    const response: any[] = await fetch(
+      `https://api.github.com/repos/${owner}/${repoName}/pulls/${pull_number}/files?per_page=100`,
+      { headers }
+    ).then(res => res.json());
+    if (Array.isArray(response)) {
+      const files = response
+        .filter(file => file.status === 'added')
+        .map(file => path.join(process.cwd(), file.filename));
+      return multimatch(files, ['**', ...globs]);
+    } else {
+      throw response;
+    }
   } catch (e) {
-    console.log(chalk.green('No new files added in this PR'));
+    console.log('Error fetching new files from Github', e);
     process.exit(0);
   }
 };
@@ -63,10 +85,10 @@ const checkCoverage = (
 };
 
 export default async function newFilesCoverageCheck(options: Options): Promise<void> {
-  const { branch, input, threshold, verbose, e: globs } = options;
+  const { input, threshold, verbose, e: globs, owner, pull_number, reponame, token } = options;
   $.verbose = !!verbose;
 
-  const newFilesAdded = await getNewFiles(branch, globs);
+  const newFilesAdded = await getNewFiles(owner, reponame, pull_number, globs, token);
 
   if (newFilesAdded.length > 0) {
     const inputContent = await fs.promises.readFile(path.resolve(process.cwd(), input), 'utf8');

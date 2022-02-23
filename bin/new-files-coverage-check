@@ -17,19 +17,20 @@ yargs(hideBin(process.argv))
     'New files coverage check',
     yargs => {
       yargs
-        .option('b', {
-          alias: 'branch',
-          describe: 'Base branch',
-          default: 'master'
+        .option('o', {
+          alias: 'owner',
+          describe: 'Git repo owner',
+          demandOption: true
         })
-        .check(argv => {
-          // eslint-disable-next-line
-          const invalid = /(^|[/.])([/.]|$)|^@$|@{|[\x00-\x20\x7f~^:?*[\\]|\.lock(\/|$)/;
-          const isBranchNameInvalid = invalid.test(argv.b);
-          if (isBranchNameInvalid) {
-            console.log('Invalid branch name', argv.b);
-          }
-          return !isBranchNameInvalid;
+        .option('r', {
+          alias: 'reponame',
+          describe: 'Git repo name',
+          demandOption: true
+        })
+        .option('p', {
+          alias: 'pull_number',
+          describe: 'Pull request number',
+          demandOption: true
         })
         .option('t', {
           alias: 'threshold',
@@ -49,7 +50,10 @@ yargs(hideBin(process.argv))
         })
         .option('verbose', {
           describe: 'Show verbose output'
-        });
+        })
+        .option('token', {
+          describe: 'Github token for authentication',
+        })
     },
     newFileCoverageCheck
   )
