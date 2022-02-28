@@ -60,9 +60,8 @@ const checkCoverage = (
 ): string[] => {
   return files.filter(fileName => {
     console.log('----------------------------------');
-    const fullFilePath = path.join(process.cwd(), fileName);
-    console.log(chalk.white('evaluating - ', fullFilePath));
-    const fileReport = coverage[fullFilePath];
+    console.log(chalk.white('evaluating - ', fileName));
+    const fileReport = coverage[fileName];
 
     if (!fileReport) {
       console.log(chalk.red(`file ${fileName} not considered/covered for/in test cases`));
